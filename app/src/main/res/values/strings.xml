@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">M08_SMS</string>
+    <string name="tv_text">Text Message:</string>
+    <string name="tv_to_number">To:</string>
+    <string name="hint_contents">type messages to send</string>
+    <string name="hint_phone_number">4051113333</string>
+    <string name="button_label">Send</string>
+</resources>
