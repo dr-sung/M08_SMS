@@ -25,7 +25,11 @@ public class MainActivity extends Activity {
 
     private int MY_PERMISSION_SEND_SMS = 0;
     private int MY_PERMISSION_RECEIVE_SMS = 1;
-    private int MY_PERMISSION_READ_PHONE_STATE = 2;
+    private int MY_PERMISSION_READ_SMS = 2;
+
+    private boolean receiveSMS = false;
+    private boolean readSMS = false;
+    private boolean sendSMS = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +43,10 @@ public class MainActivity extends Activity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if (!sendSMS) {
+                    Toast.makeText(MainActivity.this, "SEND_SMS permission not granted", Toast.LENGTH_SHORT).show();
+                    return;
+                }
                 if (toAddress.getText() == null || toAddress.getText().length() == 0) {
                     Toast.makeText(MainActivity.this, "Invaid phone number", Toast.LENGTH_SHORT).show();
                     return;
@@ -48,7 +56,7 @@ public class MainActivity extends Activity {
                     return;
                 }
                 sendSMSMessage(
-                      toAddress.getText().toString(),
+                        toAddress.getText().toString(),
                         message.getText().toString()
                 );
             }
@@ -57,22 +65,22 @@ public class MainActivity extends Activity {
         // API 23 or higher - runtime permission handling
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (getApplicationContext().checkSelfPermission(
-                    android.Manifest.permission.SEND_SMS)
+                    Manifest.permission.SEND_SMS)
                     != PackageManager.PERMISSION_GRANTED) {
                 this.requestPermissions(new String[]{Manifest.permission.SEND_SMS},
                         MY_PERMISSION_SEND_SMS);
-            }
-            if (getApplicationContext().checkSelfPermission(
-                    Manifest.permission.READ_PHONE_STATE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                this.requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE},
-                        MY_PERMISSION_READ_PHONE_STATE);
             }
             if (getApplicationContext().checkSelfPermission(
                     Manifest.permission.RECEIVE_SMS)
                     != PackageManager.PERMISSION_GRANTED) {
                 this.requestPermissions(new String[]{Manifest.permission.RECEIVE_SMS},
                         MY_PERMISSION_RECEIVE_SMS);
+            }
+            if (getApplicationContext().checkSelfPermission(
+                    Manifest.permission.READ_SMS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                this.requestPermissions(new String[]{Manifest.permission.READ_SMS},
+                        MY_PERMISSION_READ_SMS);
             }
         }
 
@@ -82,8 +90,6 @@ public class MainActivity extends Activity {
                 PendingIntent.getBroadcast(this, 0, new Intent(INTENT_SMS_DELIVERED), 0);
 
         // register broadcast receivers FOR SMS sent and delivered
-        registerReceiver(new SMSSentReceiver(), new IntentFilter(INTENT_SMS_SENT));
-        registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
 
     }
 
@@ -91,5 +97,47 @@ public class MainActivity extends Activity {
         SmsManager smsMgr = SmsManager.getDefault();
         smsMgr.sendTextMessage(address, null, message,
                 sentPendingIntent, deliveredPendingIntent);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        if (grantResults == null || grantResults.length == 0) {
+            remindPermission();
+            return;
+        }
+
+        if (requestCode == MY_PERMISSION_SEND_SMS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                sendSMS = true;
+                registerReceiver(new SMSSentReceiver(), new IntentFilter(INTENT_SMS_SENT));
+            } else {
+                remindPermission();
+            }
+        } else if (requestCode == MY_PERMISSION_RECEIVE_SMS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (readSMS) {
+                    registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
+                } else {
+                    receiveSMS = true;
+                }
+            } else {
+                remindPermission();
+            }
+        } else if (requestCode == MY_PERMISSION_READ_SMS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (receiveSMS) {
+                    registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
+                } else {
+                    readSMS = true;
+                }
+            } else {
+                remindPermission();
+            }
+        }
+    }
+
+    private void remindPermission() {
+        Toast.makeText(MainActivity.this, "SMS SEND/RECEIVE Permissions required", Toast.LENGTH_SHORT).show();
     }
 }
