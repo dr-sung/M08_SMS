@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
                 if (!sendSMS) {
-                    Toast.makeText(MainActivity.this, "SEND_SMS permission not granted", Toast.LENGTH_SHORT).show();
+                    remindPermission();
                     return;
                 }
                 if (toAddress.getText() == null || toAddress.getText().length() == 0) {
@@ -82,14 +82,17 @@ public class MainActivity extends Activity {
                 this.requestPermissions(new String[]{Manifest.permission.READ_SMS},
                         MY_PERMISSION_READ_SMS);
             }
+        } else {
+            // API 22 or lower: register receivers
+            sendSMS = readSMS = receiveSMS = true;
+            registerReceiver(new SMSSentReceiver(), new IntentFilter(INTENT_SMS_SENT));
+            registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
         }
 
         sentPendingIntent =
                 PendingIntent.getBroadcast(this, 0, new Intent(INTENT_SMS_SENT), 0);
         deliveredPendingIntent =
                 PendingIntent.getBroadcast(this, 0, new Intent(INTENT_SMS_DELIVERED), 0);
-
-        // register broadcast receivers FOR SMS sent and delivered
 
     }
 
@@ -111,26 +114,19 @@ public class MainActivity extends Activity {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 sendSMS = true;
                 registerReceiver(new SMSSentReceiver(), new IntentFilter(INTENT_SMS_SENT));
+                registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
             } else {
                 remindPermission();
             }
         } else if (requestCode == MY_PERMISSION_RECEIVE_SMS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (readSMS) {
-                    registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
-                } else {
-                    receiveSMS = true;
-                }
+                receiveSMS = true;
             } else {
                 remindPermission();
             }
         } else if (requestCode == MY_PERMISSION_READ_SMS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (receiveSMS) {
-                    registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
-                } else {
-                    readSMS = true;
-                }
+                readSMS = true;
             } else {
                 remindPermission();
             }
