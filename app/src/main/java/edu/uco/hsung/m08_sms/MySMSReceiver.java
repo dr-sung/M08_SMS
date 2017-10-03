@@ -3,6 +3,7 @@ package edu.uco.hsung.m08_sms;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.telephony.SmsMessage;
 import android.widget.Toast;
@@ -24,9 +25,15 @@ public class MySMSReceiver extends BroadcastReceiver {
             messages = new SmsMessage[pdus.length];
             // For every SMS message received
             for (int i=0; i < messages.length; i++) {
-                // Convert Object array: API 23 or higher
-                String format = bundle.getString("format");
-                messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
+                // Convert Object array
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    // API 23 or higher
+                    String format = bundle.getString("format");
+                    messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i], format);
+                } else {
+                    // API 22 or lower
+                    messages[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
+                }
                 // Sender's phone number
                 contents += "SMS from " + messages[i].getOriginatingAddress() + " : ";
                 // Fetch the text message
