@@ -43,10 +43,16 @@ public class MainActivity extends Activity {
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!sendSMS) {
-                    remindPermission();
-                    return;
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (getApplicationContext().checkSelfPermission(
+                            Manifest.permission.SEND_SMS)
+                            != PackageManager.PERMISSION_GRANTED) {
+                        remindPermission();
+                        return;
+                    }
                 }
+
                 if (toAddress.getText() == null || toAddress.getText().length() == 0) {
                     Toast.makeText(MainActivity.this, "Invaid phone number", Toast.LENGTH_SHORT).show();
                     return;
