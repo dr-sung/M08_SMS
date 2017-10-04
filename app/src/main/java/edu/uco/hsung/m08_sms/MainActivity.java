@@ -27,10 +27,6 @@ public class MainActivity extends Activity {
     private int MY_PERMISSION_RECEIVE_SMS = 1;
     private int MY_PERMISSION_READ_SMS = 2;
 
-    private boolean receiveSMS = false;
-    private boolean readSMS = false;
-    private boolean sendSMS = false;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -90,7 +86,6 @@ public class MainActivity extends Activity {
             }
         } else {
             // API 22 or lower: register receivers
-            sendSMS = readSMS = receiveSMS = true;
             registerReceiver(new SMSSentReceiver(), new IntentFilter(INTENT_SMS_SENT));
             registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
         }
@@ -118,7 +113,6 @@ public class MainActivity extends Activity {
 
         if (requestCode == MY_PERMISSION_SEND_SMS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                sendSMS = true;
                 registerReceiver(new SMSSentReceiver(), new IntentFilter(INTENT_SMS_SENT));
                 registerReceiver(new SMSDeliveredReceiver(), new IntentFilter(INTENT_SMS_DELIVERED));
             } else {
@@ -126,13 +120,11 @@ public class MainActivity extends Activity {
             }
         } else if (requestCode == MY_PERMISSION_RECEIVE_SMS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                receiveSMS = true;
             } else {
                 remindPermission();
             }
         } else if (requestCode == MY_PERMISSION_READ_SMS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                readSMS = true;
             } else {
                 remindPermission();
             }
